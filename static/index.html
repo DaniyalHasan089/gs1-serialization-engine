@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GS1 DataMatrix Serialization Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0284c7;
+      --accent: #10b981;
+      --danger: #f43f5e;
+      --input-bg: #0f172a;
+      --border: #475569;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .badge {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--primary);
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .header-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      margin-left: 1.25rem;
+      transition: color 0.2s;
+    }
+    .header-links a:hover { color: var(--primary); }
+    main {
+      flex: 1;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 2rem;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 2rem;
+    }
+    @media (max-width: 960px) {
+      main { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.75rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.1rem;
+    }
+    label {
+      display: block;
+      font-size: 0.825rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 0.75rem;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus {
+      border-color: var(--primary);
+    }
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+    .input-with-button {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      background: var(--primary);
+      color: #0f172a;
+      border: none;
+      border-radius: 6px;
+      padding: 0.65rem 1rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+    }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: #334155;
+      color: var(--text);
+    }
+    .btn-secondary:hover { background: #475569; }
+    .btn-sm {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .btn-success {
+      background: var(--accent);
+      color: #064e3b;
+    }
+    .btn-success:hover { background: #059669; }
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .checkbox-group input { width: auto; }
+    .checkbox-group label { margin-bottom: 0; cursor: pointer; }
+
+    .preview-section {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .preview-box {
+      display: flex;
+      gap: 1.5rem;
+      background: #111827;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      align-items: center;
+    }
+    .barcode-img {
+      width: 140px;
+      height: 140px;
+      background: white;
+      padding: 8px;
+      border-radius: 4px;
+      image-rendering: pixelated;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .preview-info {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+    .preview-row {
+      margin-bottom: 0.5rem;
+    }
+    .preview-label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-bottom: 0.15rem;
+    }
+    .preview-val {
+      color: var(--primary);
+      word-break: break-all;
+    }
+    .table-container {
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      overflow-x: auto;
+      max-height: 480px;
+      background: #111827;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    th, td {
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+    th {
+      background: #1e293b;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+      font-weight: 600;
+    }
+    tr:hover {
+      background: rgba(56, 189, 248, 0.05);
+    }
+    .status-alert {
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+    .status-error {
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid var(--danger);
+      color: #fda4af;
+      display: block;
+    }
+    .status-success {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--accent);
+      color: #6ee7b7;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor"/>
+        <path d="M7 7h3v3H7zM14 7h3v3h-3zM7 14h3v3H7zM14 14h3v3h-3z"/>
+      </svg>
+      <span>GS1 Serialization Engine</span>
+      <span class="badge">FastAPI v1.0</span>
+    </div>
+    <div class="header-links">
+      <a href="/docs" target="_blank">Swagger Docs</a>
+      <a href="/redoc" target="_blank">ReDoc</a>
+      <a href="/api/v1/health" target="_blank">Health</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        Batch Parameters
+      </h2>
+
+      <div id="error-box" class="status-alert"></div>
+
+      <div class="form-group">
+        <label>(01) GTIN (14 Digits)</label>
+        <input type="text" id="gtin" value="05054563197276" maxlength="14" placeholder="14-digit GTIN">
+        <div class="hint">Includes standard GS1 mod-10 check digit</div>
+      </div>
+
+      <div class="input-row">
+        <div class="form-group">
+          <label>(17) Expiry (YYMMDD)</label>
+          <input type="text" id="expiry" value="301231" maxlength="6" placeholder="YYMMDD">
+        </div>
+        <div class="form-group">
+          <label>(10) Batch / Lot</label>
+          <input type="text" id="batch" value="LOT2026A" maxlength="20" placeholder="Batch ID">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>(21) First Serial (12-20 Alphanumeric)</label>
+        <div class="input-with-button">
+          <input type="text" id="serial" value="A1B2C3D4E5F6" maxlength="20" placeholder="Blank for auto-generate">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="fetchRandomSerial()">Random</button>
+        </div>
+        <div class="hint">Leave blank to auto-generate random start serial</div>
+      </div>
+
+      <div class="input-row">
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" id="count" value="50" min="1" max="10000">
+        </div>
+        <div class="form-group">
+          <label>Pixel Scale</label>
+          <select id="scale">
+            <option value="6">Small (6x)</option>
+            <option value="10" selected>Standard (10x)</option>
+            <option value="15">Large (15x)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox-group">
+          <input type="checkbox" id="random_step">
+          <label for="random_step">Random gaps between serials (instead of +1)</label>
+        </div>
+      </div>
+
+      <div class="actions-grid">
+        <button type="button" class="btn" id="btn-generate" onclick="handleGenerate()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          Generate Codes
+        </button>
+
+        <div class="export-buttons">
+          <button type="button" class="btn btn-secondary" onclick="exportData('csv')">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Download CSV
+          </button>
+          <button type="button" class="btn btn-success" onclick="exportData('zip')">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Download ZIP
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="preview-section">
+      <div class="card">
+        <h2>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          Active Symbol Live Preview
+        </h2>
+        <div class="preview-box">
+          <img id="preview-img" class="barcode-img" src="" alt="DataMatrix Barcode">
+          <div class="preview-info">
+            <div class="preview-row">
+              <div class="preview-label">HUMAN READABLE INTERPRETATION</div>
+              <div id="preview-hri" class="preview-val">-</div>
+            </div>
+            <div class="preview-row">
+              <div class="preview-label">ENCODED DATA STREAM (FNC1 / GS SEPARATOR)</div>
+              <div id="preview-raw" class="preview-val">-</div>
+            </div>
+            <div class="preview-row" style="margin-top: 0.75rem;">
+              <a id="preview-download-link" href="#" download="datamatrix.png" class="btn btn-secondary btn-sm">Save PNG</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+          Generated Serial Codes (<span id="results-count">0</span>)
+        </h2>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Serial (21)</th>
+                <th>Human-Readable</th>
+                <th>Raw Stream</th>
+                <th>Barcode</th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                  Click "Generate Codes" to view serialized records
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function getPayload() {
+      return {
+        gtin: document.getElementById('gtin').value.trim(),
+        expiry: document.getElementById('expiry').value.trim(),
+        batch: document.getElementById('batch').value.trim(),
+        first_serial: document.getElementById('serial').value.trim() || null,
+        serial_length: 16,
+        count: parseInt(document.getElementById('count').value, 10) || 50,
+        random_step: document.getElementById('random_step').checked,
+        max_step: 1000
+      };
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-box');
+      if (msg) {
+        el.textContent = msg;
+        el.className = 'status-alert status-error';
+      } else {
+        el.className = 'status-alert';
+        el.textContent = '';
+      }
+    }
+
+    async function fetchRandomSerial() {
+      try {
+        const res = await fetch('/api/v1/serial/random?length=16');
+        const data = await res.json();
+        if (data.serial) {
+          document.getElementById('serial').value = data.serial;
+          updatePreview();
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function updatePreview() {
+      const gtin = document.getElementById('gtin').value.trim();
+      const expiry = document.getElementById('expiry').value.trim();
+      const batch = document.getElementById('batch').value.trim();
+      const serial = document.getElementById('serial').value.trim() || 'A1B2C3D4E5F6';
+      const scale = document.getElementById('scale').value;
+
+      if (gtin.length === 14 && expiry.length === 6 && batch.length > 0 && serial.length >= 12) {
+        const url = `/api/v1/barcode?gtin=${encodeURIComponent(gtin)}&expiry=${encodeURIComponent(expiry)}&batch=${encodeURIComponent(batch)}&serial=${encodeURIComponent(serial)}&scale=${scale}`;
+        document.getElementById('preview-img').src = url;
+        document.getElementById('preview-download-link').href = url;
+        document.getElementById('preview-hri').textContent = `(01)${gtin}(17)${expiry}(10)${batch}(21)${serial}`;
+        document.getElementById('preview-raw').textContent = `01${gtin}17${expiry}10${batch}<GS>21${serial}`;
+      }
+    }
+
+    async function handleGenerate() {
+      showError(null);
+      const payload = getPayload();
+      const btn = document.getElementById('btn-generate');
+      btn.disabled = true;
+      btn.textContent = 'Generating...';
+
+      try {
+        const res = await fetch('/api/v1/generate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.detail || 'Failed to generate codes');
+        }
+
+        document.getElementById('results-count').textContent = data.count;
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+
+        data.codes.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${c.index}</td>
+            <td style="color: var(--primary); font-weight:600;">${c.serial}</td>
+            <td>${c.human}</td>
+            <td style="color: var(--text-muted);">${c.raw}</td>
+            <td><a href="${c.barcode_url}" target="_blank" class="btn btn-secondary btn-sm" style="padding:2px 8px;">View</a></td>
+          `;
+          tbody.appendChild(tr);
+        });
+
+        if (data.codes.length > 0) {
+          const first = data.codes[0];
+          document.getElementById('serial').value = first.serial;
+          updatePreview();
+        }
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Generate Codes`;
+      }
+    }
+
+    async function exportData(format) {
+      showError(null);
+      const payload = getPayload();
+      const endpoint = format === 'csv' ? '/api/v1/export/csv' : '/api/v1/export/zip';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.detail || 'Export failed');
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = format === 'csv' ? 'codes.csv' : 'gs1_codes.zip';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        showError(err.message);
+      }
+    }
+
+    ['gtin', 'expiry', 'batch', 'serial', 'scale'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updatePreview);
+    });
+
+    // Initial preview load
+    updatePreview();
+  </script>
+</body>
+</html>

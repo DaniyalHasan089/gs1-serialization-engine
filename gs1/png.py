@@ -10,8 +10,8 @@ def _chunk(tag: bytes, body: bytes) -> bytes:
             struct.pack(">I", zlib.crc32(tag + body) & 0xFFFFFFFF))
 
 
-def write_png(path: Path, matrix: list[list[int]], scale: int = 10, quiet: int = 2) -> None:
-    """Write a module matrix as PNG. `quiet` = blank border in modules."""
+def create_png(matrix: list[list[int]], scale: int = 10, quiet: int = 2) -> bytes:
+    """Create a module matrix PNG bytes in memory. `quiet` = blank border in modules."""
     n = len(matrix)
     total = n + 2 * quiet
     blank = b"\xff" * (total * scale)
@@ -28,8 +28,13 @@ def write_png(path: Path, matrix: list[list[int]], scale: int = 10, quiet: int =
         rows.extend([b"\x00" + line] * scale)  # filter byte 0 per scanline
 
     side = total * scale
-    png = (b"\x89PNG\r\n\x1a\n"
-           + _chunk(b"IHDR", struct.pack(">IIBBBBB", side, side, 8, 0, 0, 0, 0))
-           + _chunk(b"IDAT", zlib.compress(b"".join(rows), 9))
-           + _chunk(b"IEND", b""))
-    Path(path).write_bytes(png)
+    return (b"\x89PNG\r\n\x1a\n"
+            + _chunk(b"IHDR", struct.pack(">IIBBBBB", side, side, 8, 0, 0, 0, 0))
+            + _chunk(b"IDAT", zlib.compress(b"".join(rows), 9))
+            + _chunk(b"IEND", b""))
+
+
+def write_png(path: Path, matrix: list[list[int]], scale: int = 10, quiet: int = 2) -> None:
+    """Write a module matrix as PNG. `quiet` = blank border in modules."""
+    Path(path).write_bytes(create_png(matrix, scale=scale, quiet=quiet))
+

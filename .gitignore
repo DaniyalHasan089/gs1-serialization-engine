@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*/__pycache__/
+**/*__pycache__*
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# Output and runtime files
+codes.csv
+images/
+images/*
+gs1_output_*/
+
+# IDE & OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+__init__
